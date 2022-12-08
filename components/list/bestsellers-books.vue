@@ -24,9 +24,9 @@
 <script setup>
 const props = defineProps({
     listName: {
-            type: String,
-            required: true
-        }
+        type: String,
+        required: true
+    }
 })
 
 const route = useRoute();

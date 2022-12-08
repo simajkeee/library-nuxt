@@ -41,8 +41,8 @@
         const book = ref(null)
         const { data, error } = await useAsyncData(
             `book-detail-${route.params.isbn}`, 
-            () => $fetch(`http://api.books.com:8000/api/bestsellers/books/${route.params.isbn}`), 
-            { pick: ['data'] }
+            () => $fetch(`/api/bestsellers/books/${route.params.isbn}`), 
+            { baseUrl: useBaseUrl(), pick: ['data'] }
         )
 
         if (!error.value) {

@@ -14,11 +14,10 @@
 
 <script setup>
 const lists = ref([])
-
 const {data, error} = await useAsyncData(
         'bestsellers-lists',
-        () => $fetch(`http://api.books.com:8000/api/bestsellers/lists`), 
-        { pick: ['data'] }
+        () => $fetch(`/api/bestsellers/lists`), 
+        { baseUrl: useBaseUrl(), pick: ['data'] }
     )
 
 if (!error.value) {

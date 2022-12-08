@@ -1,26 +1,50 @@
 <template>
     <div>
-        <form @submit="formSubmit">
-            <div>
-                <label for="login">Login: </label>
-                <input id="login" type="text">
+        <div v-if="(errors != null)">
+            <div v-for="(err, type) in errors" :id="type">
+                <h4>{{type}}</h4>
+                <ul>
+                    <li v-for="(errMsg, i) in err" :id="i">{{errMsg}}</li>
+                </ul>
             </div>
-            <div>
-                <label for="password">Password: </label>
-                <input id="password" type="password">
-            </div>
-            <div>
-                <button>Login</button>
-            </div>
-        </form>
+        </div>
+        <div>
+            <form @submit.prevent="formSubmit">
+                <div>
+                    <label for="email">Email: </label>
+                    <input v-model="email" id="email" type="text">
+                </div>
+                <div>
+                    <label for="password">Password: </label>
+                    <input v-model="password" id="password" type="password">
+                </div>
+                <div>
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+        </div>
     </div>
 </template>
 
 <script setup>
-async function formSubmit() {
-    useFetch("http://api.books.com:8000/sanctum/csrf-cookie").then(resp => {
-        console.log(resp);
-    })
-    alert("form has been submitted!");
-}
+    import { useLogin } from '~~/composables/login';
+    const email = ref("");
+    const password = ref("");
+    const errors = ref(null);
+
+    // let defaultHeaders = useDefaultHeadersCsrf();
+    // useFetch("/api/user", {
+    //     baseURL: useBaseUrl(),
+    //     method: "GET",
+    //     credentials: "include",
+    //     headers: defaultHeaders,
+    // });
+
+    async function formSubmit() {
+        try {
+            const {data, pending} = await useLogin(email, password);
+        } catch(err) {
+            errors.value = useDefaultError(err).errors;
+        }
+    }
 </script>
