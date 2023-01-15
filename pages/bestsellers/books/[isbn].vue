@@ -16,36 +16,35 @@
 </template>
 
 <script setup>
-        
-        const route = useRoute()
-        useHead({
-            script: [
-                {
-                    type: 'text/javascript',
-                    children: `
-                    document.addEventListener("DOMContentLoaded", function(){
-                        google.books.load();
+    const route = useRoute()
+    useHead({
+        script: [
+            {
+                type: 'text/javascript',
+                children: `
+                document.addEventListener("DOMContentLoaded", function(){
+                    google.books.load();
 
-                        function initialize() {
-                            var viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
-                            viewer.load('ISBN:${route.params.isbn}');
-                        }
+                    function initialize() {
+                        var viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
+                        viewer.load('ISBN:${route.params.isbn}');
+                    }
 
-                        google.books.setOnLoadCallback(initialize);
-                    });
-                    `
-                },
-            ]
-        });
+                    google.books.setOnLoadCallback(initialize);
+                });
+                `
+            },
+        ]
+    });
 
-        const book = ref(null)
-        const { data, error } = await useAsyncData(
-            `book-detail-${route.params.isbn}`, 
-            () => $fetch(`/api/bestsellers/books/${route.params.isbn}`), 
-            { baseUrl: useBaseUrl(), pick: ['data'] }
-        )
+    const book = ref(null)
+    const { data, error } = await useAsyncData(
+        `book-detail-${route.params.isbn}`, 
+        () => $fetch(`/api/bestsellers/books/${route.params.isbn}`, {baseURL: useBaseUrl()}), 
+        { pick: ['data'] }
+    )
 
-        if (!error.value) {
-            book.value = data.value.data;
-        }
+    if (!error.value) {
+        book.value = data.value.data;
+    }
 </script>

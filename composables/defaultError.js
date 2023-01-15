@@ -1,4 +1,6 @@
 export function useDefaultError(error) {
+    console.log("Listen useDefaultError composable: ");
+    console.log(error);
     if (error.errors == undefined) {
         return {
             errors: {

@@ -13,14 +13,16 @@
 </template>
 
 <script setup>
-const lists = ref([])
-const {data, error} = await useAsyncData(
+    const lists = ref([])
+    const {data, error} = await useAsyncData(
         'bestsellers-lists',
-        () => $fetch(`/api/bestsellers/lists`), 
-        { baseUrl: useBaseUrl(), pick: ['data'] }
-    )
+        () => $fetch("/api/bestsellers/lists", {
+            baseURL: useBaseUrl()
+        }),
+        { pick: ['data'] }
+    );
 
-if (!error.value) {
-    lists.value = data.value.data
-}
+    if (!error.value) {
+        lists.value = data.value.data
+    }
 </script>

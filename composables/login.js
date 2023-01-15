@@ -1,16 +1,9 @@
 import { useBaseUrl } from "./baseUrl";
-import { useDefaultHeadersCsrf } from "./defaultHeadersCsrf";
 
-export async function useLogin(email, password) {
-    const { data:d, pending:p, error:e, refresh:r } = await useCsrfCookie();
-
-    if (e.value) {
-        return { d, p, e, r };
-    }
-
-    const headers = useDefaultHeadersCsrf();
-    const loginPromise = await new Promise(async (resolve, reject) => {
+export function useLogin(email, password) {
+    return new Promise(async (resolve, reject) => {
         let responsetext = "";
+        let headers = useDefaultHeadersCsrf();
         try {
             const loginResp = await $fetch("/login", {
                 baseURL: useBaseUrl(),
@@ -31,6 +24,4 @@ export async function useLogin(email, password) {
             reject(responsetext);
         }
     });
-
-    return useAsyncData("login", () => loginPromise);
 }

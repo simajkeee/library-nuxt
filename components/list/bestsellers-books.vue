@@ -35,10 +35,12 @@ const books = ref([]);
 const links = ref([]);
 const lastPage = ref(1);
 const page = ref((route.query.page === undefined) ? 1 : route.query.page);
-
+let baseURL = useBaseUrl();
 const { data, error } = await useAsyncData(
     `bestsellers-list-${props.listName}-page${page.value}`, 
-    () => $fetch(`http://api.books.com:8000/api/bestsellers/lists/${props.listName}?page=${page.value}`),
+    () => $fetch(`/api/bestsellers/lists/${props.listName}?page=${page.value}`, {
+        baseURL,
+    }),
     { pick: ['data'] },
 );
 
@@ -57,7 +59,9 @@ if (!error.value) {
                 return;
             }
             booksFetches.push(
-                $fetch(`http://api.books.com:8000/api/bestsellers/books/${book.primary_isbn}`)
+                $fetch(`/api/bestsellers/books/${book.primary_isbn}`, {
+                    baseURL,
+                })
             );
         });
 

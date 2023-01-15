@@ -27,22 +27,20 @@
 </template>
 
 <script setup>
-    import { useLogin } from '~~/composables/login';
+    import {useUserStore} from '~~/stores/user';
+
     const email = ref("");
     const password = ref("");
     const errors = ref(null);
 
-    // let defaultHeaders = useDefaultHeadersCsrf();
-    // useFetch("/api/user", {
-    //     baseURL: useBaseUrl(),
-    //     method: "GET",
-    //     credentials: "include",
-    //     headers: defaultHeaders,
-    // });
-
     async function formSubmit() {
+        const store = useUserStore();
+        const {logIn} = store;
+
+        errors.value = null;
         try {
-            const {data, pending} = await useLogin(email, password);
+            await logIn(email, password);
+            navigateTo("/");
         } catch(err) {
             errors.value = useDefaultError(err).errors;
         }
