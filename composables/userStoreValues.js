@@ -3,7 +3,7 @@ import { useUserStore } from "~~/stores/user";
 
 export function useUserStoreValues() {
     let store = useUserStore();
-    let {logIn, logOut, getUser, getDefaultUser} = store;
+    let {logIn, logOut, getUserUnothorizedRedirect, getCurrentUser, getDefaultUser} = store;
     let {user, isLoggedIn} = storeToRefs(store);
     
 
@@ -13,7 +13,8 @@ export function useUserStoreValues() {
         isLoggedIn,
         logIn,
         logOut,
-        getUser,
+        getUserUnothorizedRedirect,
+        getCurrentUser,
         getDefaultUser,
     };
 }

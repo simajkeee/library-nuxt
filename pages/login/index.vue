@@ -1,14 +1,9 @@
 <template>
     <div>
-        <div v-if="(errors != null)">
-            <div v-for="(err, type) in errors" :id="type">
-                <h4>{{type}}</h4>
-                <ul>
-                    <li v-for="(errMsg, i) in err" :id="i">{{errMsg}}</li>
-                </ul>
+        <div v-if="show">
+            <div v-if="message">
+                {{ message }}
             </div>
-        </div>
-        <div>
             <form @submit.prevent="formSubmit">
                 <div>
                     <label for="email">Email: </label>
@@ -23,26 +18,34 @@
                 </div>
             </form>
         </div>
+        <div v-else>
+            <p>Loading page info...</p>
+        </div>
     </div>
 </template>
 
 <script setup>
-    import {useUserStore} from '~~/stores/user';
+    definePageMeta({
+        middleware: ["guest"]
+    });
 
+    const show = ref(false);
+    onMounted(() => {
+        show.value = true;
+    });
+
+    const message = ref("");
     const email = ref("");
     const password = ref("");
-    const errors = ref(null);
 
     async function formSubmit() {
-        const store = useUserStore();
-        const {logIn} = store;
-
-        errors.value = null;
+        message.value = "";
+        const {logIn} = useUserStoreValues();
         try {
             await logIn(email, password);
             navigateTo("/");
-        } catch(err) {
-            errors.value = useDefaultError(err).errors;
+        } catch(error) {
+            message.value = error;
         }
     }
 </script>

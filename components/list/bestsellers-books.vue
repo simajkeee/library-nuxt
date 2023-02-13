@@ -1,5 +1,5 @@
 <template>
-    <div v-if="books.length"> 
+    <div v-if="!loading && books.length"> 
         <h2>List of books:</h2>
         <div>
             <div v-for="(book, index) in books" :key="index">
@@ -18,6 +18,9 @@
         </div>
         <CommonPagination v-if="(lastPage > 1)" :links="links"/>
     </div>
+    <div v-else>
+        <p>List of books is loading...</p>
+    </div>
 </template>
 
 
@@ -29,14 +32,14 @@ const props = defineProps({
     }
 })
 
+const loading = ref(true);
 const route = useRoute();
-
 const books = ref([]);
 const links = ref([]);
 const lastPage = ref(1);
 const page = ref((route.query.page === undefined) ? 1 : route.query.page);
 let baseURL = useBaseUrl();
-const { data, error } = await useAsyncData(
+const { data, error, pending, refresh } = await useLazyAsyncData(
     `bestsellers-list-${props.listName}-page${page.value}`, 
     () => $fetch(`/api/bestsellers/lists/${props.listName}?page=${page.value}`, {
         baseURL,
@@ -44,63 +47,73 @@ const { data, error } = await useAsyncData(
     { pick: ['data'] },
 );
 
-if (!error.value) {
-    books.value = data.value.data.data;
-    links.value = data.value.data.links
-    lastPage.value = data.value.data.last_page;
+if (!pending.value) {
+    refresh();
+}
 
-    let onMount = async () => {
-        if (!process.client) {
+watch(error, (newError) => {
+    throw createError(newError);
+});
+
+watch(data, async (newData) => {
+    books.value = newData.data.data;
+    links.value = newData.data.links;
+    lastPage.value = newData.data.last_page;
+    loading.value = false;
+
+    if (!process.client) {
+        return;
+    }
+    let results = await fetchBooksImages();
+    results.forEach(res => {
+        if (res.status !== "fulfilled") {
             return;
         }
-        let booksFetches = [];
-        books.value.forEach(book => {
-            if (book.primary_isbn === undefined || book.primary_isbn === "None") {
-                return;
-            }
-            booksFetches.push(
-                $fetch(`/api/bestsellers/books/${book.primary_isbn}`, {
-                    baseURL,
-                })
-            );
-        });
 
-        let results = await Promise.allSettled(booksFetches);
+        let aBook = res.value.data;
+        if (aBook === null) {
+            console.log(`aBook is null, isbn: ${aBook.isbn}`);
+            return;
+        }
 
-        results.forEach(res => {
-            if (res.status !== "fulfilled") {
-                return;
-            }
+        let imgLinks = aBook.imageLinks;
+        if (imgLinks === undefined) {
+            console.log(`imageLinks is undefined, isbn: ${aBook.isbn}`)
+            return;
+        }
 
-            let aBook = res.value.data;
-            if (aBook === null) {
-                console.log(`aBook is null, isbn: ${aBook.isbn}`);
-                return;
-            }
+        if (imgLinks.thumbnail === undefined) {
+            console.log(`imgLinks.thumbnail is undefined, isbn: ${aBook.isbn}`);
+            return;
+        }
+        
+        let img = document.createElement('img');
+        img.src = imgLinks.thumbnail;
+        
+        let imgContainer = document.getElementById(`book-img-${aBook.isbn}`);
+        if (imgContainer === null) {
+            console.log(`imgContainer is null, isbn: ${aBook.isbn}`);
+            return;
+        }
+        imgContainer.appendChild(img);
+    });
+});
 
-            let imgLinks = aBook.imageLinks;
-            if (imgLinks === undefined) {
-                console.log(`imageLinks is undefined, isbn: ${aBook.isbn}`)
-                return;
-            }
+function fetchBooksImages() {
+    let booksFetches = [];
+    books.value.forEach(book => {
+        if (book.primary_isbn === undefined || book.primary_isbn === "None") {
+            return;
+        }
+        booksFetches.push(
+            $fetch(`/api/bestsellers/books/${book.primary_isbn}`, {
+                baseURL,
+            })
+        );
+    });
 
-            if (imgLinks.thumbnail === undefined) {
-                console.log(`imgLinks.thumbnail is undefined, isbn: ${aBook.isbn}`);
-                return;
-            }
-            
-            let img = document.createElement('img');
-            img.src = imgLinks.thumbnail;
-            
-            let imgContainer = document.getElementById(`book-img-${aBook.isbn}`);
-            if (imgContainer === null) {
-                console.log(`imgContainer is null, isbn: ${aBook.isbn}`);
-                return;
-            }
-            imgContainer.appendChild(img);
-        });
-    }
-    onMounted(onMount);
+    return Promise.allSettled(booksFetches);
 }
+
 
 </script>

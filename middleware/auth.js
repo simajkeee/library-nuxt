@@ -1,8 +1,10 @@
 export default defineNuxtRouteMiddleware((to, from) => {
-    const {isLoggedIn, getUser} = useUserStoreValues();
+    const {isLoggedIn, getCurrentUser} = useUserStoreValues();
     if (!isLoggedIn.value) {
-        getUser().then(user => {
+        getCurrentUser().then(user => {
             usePatchStoreUser(user);
+        }).catch(() => {
+            navigateTo("/");
         });
     }
 });

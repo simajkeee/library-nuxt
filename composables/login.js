@@ -14,9 +14,10 @@ export function useLogin(email, password) {
                     "email": email.value,
                     "password": password.value,
                 }),
-                parseResponse(responseText) {
-                    responsetext = JSON.parse(responseText);
-                    return responseText;
+                onResponseError({ request, options, response }) {
+                    if (!response.ok) {
+                        responsetext = response._data.message
+                    }
                 }
             });
             resolve(loginResp);

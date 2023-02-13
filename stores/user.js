@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
-import { useCurrentUser } from "~~/composables/currentUser";
 import { useLogin } from "~~/composables/login";
 import { useLogout } from "~~/composables/logout";
+import { useCurrentUserUnathorizedRedirect } from "~~/composables/currentUserUnathorizedRedirect";
 
 const defaultUser = {
     id: 0,
@@ -12,7 +12,7 @@ const defaultUser = {
 export const useUserStore = defineStore(
     "user", 
     () => {
-        const user = ref(defaultUser)//useState("user", () => defaultUser);
+        const user = ref(defaultUser);
 
         const isLoggedIn = computed(() => {
             return user.value.email !== "" && user.value.email !== undefined;
@@ -20,31 +20,47 @@ export const useUserStore = defineStore(
 
         async function logIn(email, password) {
             await useCsrfCookie();
-            await useLogin(email, password);
-            const currentUser = await useCurrentUser();
-            setUser(currentUser);
+            const user = await useLogin(email, password);
+            setUser(parseUserData(user))
         }
 
         async function logOut() {
             await useCsrfCookie();
             await useLogout();
             setUser(defaultUser);
+            navigateTo({
+                path: "/"
+            });
         }
 
-        async function getUser() {
+        async function getUserUnothorizedRedirect() {
             await useCsrfCookie();
-            return useCurrentUser();
+            return useCurrentUserUnathorizedRedirect();
+        }
+
+        async function getCurrentUser() {
+            await useCsrfCookie();
+            return useCurrentUser()
         }
 
         function getDefaultUser() {
             return defaultUser;
         }
 
-        function setUser(currentUser) {
-            user.value = {
-                id: currentUser.id,
-                name: currentUser.name,
-                email: currentUser.email,
+        function setUser(newUser) {
+            user.value.id = newUser.id;
+            user.value.name = newUser.name;
+            user.value.email = newUser.email;
+        }
+
+        function parseUserData(userData) {
+            if (!userData || userData == undefined) {
+                return defaultUser;
+            }
+            return {
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
             };
         }
 
@@ -53,7 +69,8 @@ export const useUserStore = defineStore(
             isLoggedIn,
             logIn,
             logOut,
-            getUser,
+            getUserUnothorizedRedirect,
+            getCurrentUser,
             getDefaultUser,
         };
     },
